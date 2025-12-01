@@ -8,19 +8,20 @@ The infrastructure is defined using **Bicep** and deployed via **Azure Developer
 
 ```mermaid
 graph TD
+    %% --- Groups ---
     subgraph Azure["Azure Cloud"]
-        style Azure fill:#f9f9f9,stroke:#999
-        
+        style Azure fill:#f4f6f8,stroke:#8ca0b3,stroke-width:1px,color:#000
+
         subgraph VNet["Virtual Network"]
-            style VNet fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
-            
+            style VNet fill:#d6e9ff,stroke:#1e88e5,stroke-width:2px
+
             subgraph AppSubnet["App Subnet (Microsoft.Web/serverFarms)"]
-                style AppSubnet fill:#ffffff,stroke:#0277bd,stroke-dasharray: 5 5
+                style AppSubnet fill:#ffffff,stroke:#1e88e5,stroke-dasharray: 4 4
                 FuncApp["⚡ Azure Function<br/>(Flex Consumption)"]:::function
             end
-            
+
             subgraph PESubnet["Private Endpoint Subnet"]
-                style PESubnet fill:#ffffff,stroke:#0277bd,stroke-dasharray: 5 5
+                style PESubnet fill:#ffffff,stroke:#1e88e5,stroke-dasharray: 4 4
                 PE_Blob["🔒 PE: Blob Storage"]:::pe
                 PE_Queue["🔒 PE: Queue Storage"]:::pe
                 PE_Table["🔒 PE: Table Storage"]:::pe
@@ -28,42 +29,43 @@ graph TD
             end
         end
 
-        subgraph ManagedServices["Paas Resources"]
-            style ManagedServices fill:#f3e5f5,stroke:#7b1fa2
-            
+        subgraph ManagedServices["PaaS Resources"]
+            style ManagedServices fill:#eef2ff,stroke:#5c6bc0
+
             Storage["📦 Storage Account<br/>(Public Access Disabled)"]:::storage
             KV["🔑 Key Vault<br/>(Public Access Disabled)"]:::kv
             SB["🚌 Service Bus (Basic)<br/>(RBAC Auth Only)"]:::sb
         end
-        
+
         Monitor["📊 App Insights &<br/>Log Analytics"]:::monitor
     end
 
-    %% Networking Flows
+    %% --- Networking Flows ---
     FuncApp <-->|"VNet Integration"| PE_Blob
     FuncApp <-->|"VNet Integration"| PE_Queue
     FuncApp <-->|"VNet Integration"| PE_Table
     FuncApp <-->|"VNet Integration"| PE_KV
-    
-    %% Private Link Connections
+
+    %% --- Private Link Connections ---
     PE_Blob -.->|"Private Link"| Storage
     PE_Queue -.->|"Private Link"| Storage
     PE_Table -.->|"Private Link"| Storage
     PE_KV -.->|"Private Link"| KV
-    
-    %% Service Bus Flow (Public but RBAC secured)
+
+    %% --- Service Bus Flow (Public but RBAC secured) ---
     FuncApp -- "HTTPS (RBAC)" --> SB
-    
-    %% Monitoring
+
+    %% --- Monitoring ---
     FuncApp -.-> Monitor
 
-    %% Styling
-    classDef function fill:#cdbcff,stroke:#5e35b1,color:black;
-    classDef storage fill:#a5d6a7,stroke:#2e7d32,color:black;
-    classDef kv fill:#fff59d,stroke:#fbc02d,color:black;
-    classDef sb fill:#ffcc80,stroke:#ef6c00,color:black;
-    classDef pe fill:#eeeeee,stroke:#616161,stroke-width:1px,color:black;
-    classDef monitor fill:#b3e5fc,stroke:#0277bd,color:black;
+    %% --- Styling ---
+    classDef function fill:#c7bfff,stroke:#512da8,color:#000,font-weight:bold;
+    classDef storage fill:#c8e6c9,stroke:#2e7d32,color:#000;
+    classDef kv fill:#fff9c4,stroke:#f9a825,color:#000;
+    classDef sb fill:#ffe0b2,stroke:#fb8c00,color:#000;
+    classDef pe fill:#f1f1f1,stroke:#757575,stroke-width:1px,color:#000;
+    classDef monitor fill:#bbdefb,stroke:#1e88e5,color:#000;
+
 ```
 
 The solution deploys the following Azure resources:
@@ -122,7 +124,7 @@ The solution deploys the following Azure resources:
 
    Run the script to configure a secure environment with VNet integration enabled:
 
-   ```ps
+   ```powershell
    .\setEnv.ps1 -Environment dev -AppName myapp -Location eastus -BusinessUnit my-company -createKV $true -createServiceBus $true -vnetEnabled $true -Apply
    ```
 
@@ -130,7 +132,7 @@ The solution deploys the following Azure resources:
 
    For rapid development or testing where public access is acceptable (and costs/complexity of VNet are not needed), you can disable VNet integration. Resources will be publicly accessible.
 
-   ```ps
+   ```powershell
    .\setEnv.ps1 -Environment dev -AppName myapp -Location eastus -BusinessUnit my-company -createKV $true -createServiceBus $true -vnetEnabled $false -Apply
    ```
 
@@ -159,26 +161,6 @@ The Bicep templates automatically configure the Function App with the following 
 - `AzureWebJobsStorage__credential`: `managedidentity` (Uses RBAC for storage).
 - `ServiceBusConnection__fullyQualifiedNamespace`: The DNS name of your Service Bus.
 - `ServiceBusConnection__credential`: `managedidentity`.
-
-## 🔄 CI/CD with GitHub Actions
-
-This repository includes a workflow `.github/workflows/bicep-build.yml` for automated infrastructure validation.
-
-What it does:
-
-- Triggered on `push` and `pull_request` to the `main` branch.
-- Installs the Bicep CLI.
-- Runs `bicep build infra/main.bicep` to validate syntax and compilation.
-
-This ensures that any changes to the infrastructure code are valid before being merged.
-
-### Manual Trigger
-
-You can also run this validation manually without pushing code:
-
-1. Go to the **Actions** tab in GitHub.
-2. Select **Validate Bicep Code** from the left menu.
-3. Click the **Run workflow** button.
 
 ## 🛠️ Troubleshooting
 
