@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "principalId": {
+      "value": "${AZURE_PRINCIPAL_ID}"
+    },
+    "vnetEnabled": {
+      "value": "${VNET_ENABLED}"
+    },
+    "resourceGroupName": {
+      "value": "${AZURE_RESOURCE_GROUP}"
+    },
+    "apiServiceName": {
+      "value": "${apiServiceName}"
+    },
+    "appServicePlanName": {
+      "value": "${appServicePlanName}"
+    },
+    "storageAccountName": {
+      "value": "${storageAccountName}"
+    },
+    "logAnalyticsName": {
+      "value": "${logAnalyticsName}"
+    },
+    "applicationInsightsName": {
+      "value": "${applicationInsightsName}"
+    },
+    "functionAppRuntime": {
+      "value": "${functionAppRuntime}"
+    },
+    "functionAppRuntimeVersion": {
+      "value": "${functionAppRuntimeVersion}"
+    },
+    "instanceMemoryMB": {
+      "value": "${instanceMemoryMB}"
+    },
+    "vNetName": {
+      "value": "${vNetName}"
+    },
+    "blobPrivateEndpointName": {
+      "value": "${blobPrivateEndpointName}"
+    },
+    "queuePrivateEndpointName": {
+      "value": "${queuePrivateEndpointName}"
+    },
+    "tablePrivateEndpointName": {
+      "value": "${tablePrivateEndpointName}"
+    },
+    "apiUserAssignedIdentityName": {
+      "value": "${apiUserAssignedIdentityName}"
+    },
+    "keyVaultName": {
+      "value": "${keyVaultName}"
+    },
+    "createKV": {
+      "value": "${createKV}"
+    },
+    "createServiceBus": {
+      "value": "${createServiceBus}"
+    },
+    "serviceBusName": {
+      "value": "${serviceBusName}"
+    },
+    "serviceBusQueueName": {
+      "value": "${serviceBusQueueName}"
+    }
+  }
+}
