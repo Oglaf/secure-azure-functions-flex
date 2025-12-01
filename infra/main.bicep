@@ -132,6 +132,7 @@ module api './app/api.bicep' = {
     identityId: apiUserAssignedIdentity.outputs.resourceId
     identityClientId: apiUserAssignedIdentity.outputs.clientId
     createServiceBus: createServiceBus
+    serviceBusName: createServiceBus ? serviceBus.outputs.serviceBusName : ''
     appSettings: {
     }
     virtualNetworkSubnetId: vnetEnabled ? serviceVirtualNetwork.outputs.appSubnetID : ''

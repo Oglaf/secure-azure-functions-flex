@@ -5,8 +5,8 @@ param tags object = {}
 param applicationInsightsName string = ''
 param appServicePlanId string
 param appSettings object = {}
-param runtimeName string 
-param runtimeVersion string 
+param runtimeName string
+param runtimeVersion string
 param serviceName string = 'api'
 param storageAccountName string
 param deploymentStorageContainerName string
@@ -20,6 +20,7 @@ param enableQueue bool = false
 param enableTable bool = false
 param enableFile bool = false
 param createServiceBus bool = false
+param serviceBusName string = ''
 
 @allowed(['SystemAssigned', 'UserAssigned'])
 param identityType string = 'UserAssigned'
@@ -32,7 +33,7 @@ var baseAppSettings = {
   // Only include required credential settings unconditionally
   AzureWebJobsStorage__credential: 'managedidentity'
   AzureWebJobsStorage__clientId: identityClientId
-  
+
   // Standard environment variable for DefaultAzureCredential to pick up the User Assigned Identity
   AZURE_CLIENT_ID: identityClientId
 
@@ -42,10 +43,13 @@ var baseAppSettings = {
 }
 
 // Settings for Service Bus (only added if createServiceBus is true)
-var serviceBusSettings = createServiceBus ? {
-  ServiceBusConnection__clientId: identityClientId
-  ServiceBusConnection__credential: 'managedidentity'
-} : {}
+var serviceBusSettings = createServiceBus
+  ? {
+      ServiceBusConnection__fullyQualifiedNamespace: '${serviceBusName}.servicebus.windows.net'
+      ServiceBusConnection__clientId: identityClientId
+      ServiceBusConnection__credential: 'managedidentity'
+    }
+  : {}
 
 // Dynamically build storage endpoint settings based on feature flags
 var blobSettings = enableBlob ? { AzureWebJobsStorage__blobServiceUri: stg.properties.primaryEndpoints.blob } : {}
@@ -81,7 +85,7 @@ module api 'br/public:avm/res/web/site:0.15.1' = {
     location: location
     tags: union(tags, { 'azd-service-name': serviceName })
     serverFarmResourceId: appServicePlanId
-    publicNetworkAccess: 'Enabled' 
+    publicNetworkAccess: 'Enabled'
     managedIdentities: {
       systemAssigned: identityType == 'SystemAssigned'
       userAssignedResourceIds: [
@@ -96,7 +100,7 @@ module api 'br/public:avm/res/web/site:0.15.1' = {
           value: '${stg.properties.primaryEndpoints.blob}${deploymentStorageContainerName}'
           authentication: {
             type: identityType == 'SystemAssigned' ? 'SystemAssignedIdentity' : 'UserAssignedIdentity'
-            userAssignedIdentityResourceId: identityType == 'UserAssigned' ? identityId : '' 
+            userAssignedIdentityResourceId: identityType == 'UserAssigned' ? identityId : ''
           }
         }
       }
@@ -118,4 +122,6 @@ module api 'br/public:avm/res/web/site:0.15.1' = {
 }
 
 output SERVICE_API_NAME string = api.outputs.name
-output SERVICE_API_IDENTITY_PRINCIPAL_ID string = identityType == 'SystemAssigned' ? api.outputs.?systemAssignedMIPrincipalId ?? '' : ''
+output SERVICE_API_IDENTITY_PRINCIPAL_ID string = identityType == 'SystemAssigned'
+  ? api.outputs.?systemAssignedMIPrincipalId ?? ''
+  : ''
