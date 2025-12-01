@@ -1,6 +1,8 @@
 # Secure Azure Functions (Flex Consumption) with VNet Integration
 
-This project provisions a secure, enterprise-grade Azure Serverless infrastructure using **Azure Functions Flex Consumption Plan**. It is designed to be a "Zero Trust" environment where public access is restricted, and internal services communicate over **Private Endpoints**. The infrastructure is defined using **Bicep** and deployed via **Azure Developer CLI (`azd`)**.
+This project provisions a secure, enterprise-grade Azure Serverless infrastructure using **Azure Functions Flex Consumption Plan**. It is designed to be a "Zero Trust" environment where public access is restricted, and internal services communicate over **Private Endpoints**.
+
+The infrastructure is defined using **Bicep** and deployed via **Azure Developer CLI (`azd`)**.
 
 ## 🏗️ Architecture Overview
 
@@ -91,50 +93,54 @@ The solution deploys the following Azure resources:
 
 ### Installation
 
-1. **Clone the repository:**
+1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/your-username/azure-functions-flex-dotnet-vnet.git
-    cd azure-functions-flex-dotnet-vnet
-    ```
+   ```
+   git clone https://github.com/your-username/azure-functions-flex-dotnet-vnet.git
+   cd azure-functions-flex-dotnet-vnet
+   ```
 
-2. **Initialize the Environment Variables:**
+2. Initialize the Environment Variables:
 
-    This project uses a PowerShell script to generate consistent, compliant resource names and set environment variables for azd.
+   This project uses a PowerShell script to generate consistent, compliant resource names and set environment variables for `azd`.
 
-    **Secure Production Setup (Default):**
+   Parameters:
 
-    Run the script to configure a secure environment with VNet integration enabled:
+   - `-Environment`: Environment name (e.g., `dev`, `stg`, `prd`).
+   - `-AppName`: Short name for your application (e.g., `myapp`, `demo`).
+   - `-Location`: Azure region (e.g., `eastus`, `westeurope`).
+   - `-BusinessUnit`: Business Unit name used for resource naming (default: `my-company`).
+   - `-functionAppRuntime`: The runtime stack for the function (default: `dotnet-isolated`).
+   - `-functionAppRuntimeVersion`: The version of the runtime (default: `8.0`).
+   - `-instanceMemoryMB`: Memory size for the Flex Consumption instance (default: `2048`).
+   - `-createKV`: `$true` to provision a Key Vault.
+   - `-createServiceBus`: `$true` to provision a Service Bus Namespace.
+   - `-vnetEnabled`: `$true` (default) creates VNet and Private Endpoints. `$false` skips VNet creation and enables public access on resources.
+   - `-Apply`: specific switch to apply the configuration to `azd`. Without this, it only performs a dry run.
 
-    ```powershell
-    .\setEnv.ps1 -Environment dev -AppName myapp -Location eastus -createKV $true -createServiceBus $true -vnetEnabled $true -Apply
-    ```
+   Secure Production Setup (Default):
 
-    **Public Development Setup:**
+   Run the script to configure a secure environment with VNet integration enabled:
 
-    For rapid development or testing where public access is acceptable (and costs/complexity of VNet are not needed), you can disable VNet integration. Resources will be publicly accessible.
+   ```ps
+   .\setEnv.ps1 -Environment dev -AppName myapp -Location eastus -BusinessUnit my-company -createKV $true -createServiceBus $true -vnetEnabled $true -Apply
+   ```
 
-    ```powershell
-    .\setEnv.ps1 -Environment dev -AppName myapp -Location eastus -createKV $true -createServiceBus $true -vnetEnabled $false -Apply
-    ```
+   Public Development Setup:
 
-    **Parameters:**
+   For rapid development or testing where public access is acceptable (and costs/complexity of VNet are not needed), you can disable VNet integration. Resources will be publicly accessible.
 
-    - `-Environment`: Environment name (e.g., `dev`, `stg`, `prd`).
-    - `-AppName`: Short name for your application (e.g., `scanner`, `vdo`).
-    - `-Location`: Azure region (e.g., `eastus`, `westeurope`).
-    - `-createKV`: `$true` to provision a Key Vault.
-    - `-createServiceBus`: `$true` to provision a Service Bus Namespace.
-    - `-vnetEnabled`: `$true` (default) creates VNet and Private Endpoints. `$false` skips VNet creation and enables public access on resources.
-    - `-Apply`: specific switch to apply the configuration to `azd`. Without this, it only performs a dry run.
+   ```ps
+   .\setEnv.ps1 -Environment dev -AppName myapp -Location eastus -BusinessUnit my-company -createKV $true -createServiceBus $true -vnetEnabled $false -Apply
+   ```
 
-3. **Provision Infrastructure:**
+3. Provision Infrastructure:
 
-    Since code deployment is handled separately (or disabled in azure.yaml), use azd provision to create the Azure resources.
+   Since code deployment is handled separately (or disabled in `azure.yaml`), use `azd provision` to create the Azure resources.
 
-    ```bash
-    azd provision
-    ```
+   ```
+   azd provision
+   ```
 
 ## ⚙️ Configuration Details
 
@@ -154,9 +160,36 @@ The Bicep templates automatically configure the Function App with the following 
 - `ServiceBusConnection__fullyQualifiedNamespace`: The DNS name of your Service Bus.
 - `ServiceBusConnection__credential`: `managedidentity`.
 
-## 📦 Deployment
+## 🔄 CI/CD with GitHub Actions
 
-This repository focuses on **Infrastructure as Code (IaC)**. The application code deployment logic has been decoupled from `azd` to allow for flexibility in CI/CD pipelines. To deploy your function code, you can use the Azure Functions Core Tools or GitHub Actions:
+This repository includes a workflow `.github/workflows/bicep-build.yml` for automated infrastructure validation.
 
-```bash
-func azure functionapp publish <your-function-app-name> --dotnet-isolated
+What it does:
+
+- Triggered on `push` and `pull_request` to the `main` branch.
+- Installs the Bicep CLI.
+- Runs `bicep build infra/main.bicep` to validate syntax and compilation.
+
+This ensures that any changes to the infrastructure code are valid before being merged.
+
+### Manual Trigger
+
+You can also run this validation manually without pushing code:
+
+1. Go to the **Actions** tab in GitHub.
+2. Select **Validate Bicep Code** from the left menu.
+3. Click the **Run workflow** button.
+
+## 🛠️ Troubleshooting
+
+- "404 Site Not Found" during deployment:
+  - This is usually a race condition where the Function App starts before DNS propagation for the Storage Private Endpoint is complete.
+  - Fix: Wait 1–2 minutes and retry the deployment. The infrastructure is correct; it just needs time for networking to converge.
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+## 📄 License
+
+This project is licensed under the MIT License.

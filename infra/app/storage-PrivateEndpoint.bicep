@@ -24,7 +24,9 @@ var blobPrivateDNSZoneName = 'privatelink.blob.${environment().suffixes.storage}
 var queuePrivateDNSZoneName = 'privatelink.queue.${environment().suffixes.storage}'
 var tablePrivateDNSZoneName = 'privatelink.table.${environment().suffixes.storage}'
 
-// AVM module for Blob Private Endpoint with private DNS zone
+// --------------------------------------------------------------------------------
+// 1. Blob Storage Private Endpoint & DNS
+// --------------------------------------------------------------------------------
 module blobPrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' = if (enableBlob) {
   name: 'blob-private-endpoint-deployment'
   params: {
@@ -44,7 +46,6 @@ module blobPrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' =
       }
     ]
     customDnsConfigs: []
-    // Creates private DNS zone and links
     privateDnsZoneGroup: {
       name: 'blobPrivateDnsZoneGroup'
       privateDnsZoneGroupConfigs: [
@@ -57,7 +58,27 @@ module blobPrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' =
   }
 }
 
-// AVM module for Queue Private Endpoint with private DNS zone
+module privateDnsZoneBlobDeployment 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (enableBlob) {
+  name: 'blob-private-dns-zone-deployment'
+  params: {
+    name: blobPrivateDNSZoneName
+    location: 'global'
+    tags: tags
+    virtualNetworkLinks: [
+      {
+        name: '${resourceName}-blob-link-${take(toLower(uniqueString(resourceName, virtualNetworkName)), 4)}'
+        virtualNetworkResourceId: vnet.id
+        registrationEnabled: false
+        location: 'global'
+        tags: tags
+      }
+    ]
+  }
+}
+
+// --------------------------------------------------------------------------------
+// 2. Queue Storage Private Endpoint & DNS
+// --------------------------------------------------------------------------------
 module queuePrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' = if (enableQueue) {
   name: 'queue-private-endpoint-deployment'
   params: {
@@ -77,7 +98,6 @@ module queuePrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' 
       }
     ]
     customDnsConfigs: []
-    // Creates private DNS zone and links
     privateDnsZoneGroup: {
       name: 'queuePrivateDnsZoneGroup'
       privateDnsZoneGroupConfigs: [
@@ -90,7 +110,27 @@ module queuePrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' 
   }
 }
 
-// AVM module for Table Private Endpoint with private DNS zone
+module privateDnsZoneQueueDeployment 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (enableQueue) {
+  name: 'queue-private-dns-zone-deployment'
+  params: {
+    name: queuePrivateDNSZoneName
+    location: 'global'
+    tags: tags
+    virtualNetworkLinks: [
+      {
+        name: '${resourceName}-queue-link-${take(toLower(uniqueString(resourceName, virtualNetworkName)), 4)}'
+        virtualNetworkResourceId: vnet.id
+        registrationEnabled: false
+        location: 'global'
+        tags: tags
+      }
+    ]
+  }
+}
+
+// --------------------------------------------------------------------------------
+// 3. Table Storage Private Endpoint & DNS
+// --------------------------------------------------------------------------------
 module tablePrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' = if (enableTable) {
   name: 'table-private-endpoint-deployment'
   params: {
@@ -110,7 +150,6 @@ module tablePrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' 
       }
     ]
     customDnsConfigs: []
-    // Creates private DNS zone and links
     privateDnsZoneGroup: {
       name: 'tablePrivateDnsZoneGroup'
       privateDnsZoneGroupConfigs: [
@@ -123,45 +162,6 @@ module tablePrivateEndpoint 'br/public:avm/res/network/private-endpoint:0.11.0' 
   }
 }
 
-// AVM module for Blob Private DNS Zone
-module privateDnsZoneBlobDeployment 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (enableBlob) {
-  name: 'blob-private-dns-zone-deployment'
-  params: {
-    name: blobPrivateDNSZoneName
-    location: 'global'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        name: '${resourceName}-blob-link-${take(toLower(uniqueString(resourceName, virtualNetworkName)), 4)}'
-        virtualNetworkResourceId: vnet.id
-        registrationEnabled: false
-        location: 'global'
-        tags: tags
-      }
-    ]
-  }
-}
-
-// AVM module for Queue Private DNS Zone
-module privateDnsZoneQueueDeployment 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (enableQueue) {
-  name: 'queue-private-dns-zone-deployment'
-  params: {
-    name: queuePrivateDNSZoneName
-    location: 'global'
-    tags: tags
-    virtualNetworkLinks: [
-      {
-        name: '${resourceName}-queue-link-${take(toLower(uniqueString(resourceName, virtualNetworkName)), 4)}'
-        virtualNetworkResourceId: vnet.id
-        registrationEnabled: false
-        location: 'global'
-        tags: tags
-      }
-    ]
-  }
-}
-
-// AVM module for Table Private DNS Zone
 module privateDnsZoneTableDeployment 'br/public:avm/res/network/private-dns-zone:0.7.1' = if (enableTable) {
   name: 'table-private-dns-zone-deployment'
   params: {
