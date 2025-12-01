@@ -124,7 +124,7 @@ The solution deploys the following Azure resources:
 
    Run the script to configure a secure environment with VNet integration enabled:
 
-   ```ps
+   ```powershell
    .\setEnv.ps1 -Environment dev -AppName myapp -Location eastus -BusinessUnit my-company -createKV $true -createServiceBus $true -vnetEnabled $true -Apply
    ```
 
@@ -132,7 +132,7 @@ The solution deploys the following Azure resources:
 
    For rapid development or testing where public access is acceptable (and costs/complexity of VNet are not needed), you can disable VNet integration. Resources will be publicly accessible.
 
-   ```ps
+   ```powershell
    .\setEnv.ps1 -Environment dev -AppName myapp -Location eastus -BusinessUnit my-company -createKV $true -createServiceBus $true -vnetEnabled $false -Apply
    ```
 
