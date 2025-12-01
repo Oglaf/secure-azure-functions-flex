@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'infra/**'
   pull_request:
     branches:
       - master
+    paths:
+      - 'infra/**'
   workflow_dispatch:
 
 jobs:
